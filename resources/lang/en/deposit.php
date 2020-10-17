@@ -1,0 +1,30 @@
+<?php
+
+return [
+
+    'deposit_registration'=>'Deposit registration',
+    'delete'=>'Delete',
+    'shipper'=>'Shipper',
+    'deposit_year'=>'Deposit year',
+    'deposit_month'=>'Deposit month',
+    'deposit_day'=>'Deposit day',
+    'transfer'=>'Transfer',
+    'offset'=>'Offset',
+    'other'=>'Other',
+    'transfer_fee'=>'Transfer fee',
+    'total_credit_amount'=>'Total credit amount',
+    'invoice_balance'=>'Invoice balance',
+    'yen'=>'yen',
+    'january'=>'January',
+    'february'=>'February',
+    'march'=>'March',
+    'april'=>'April',
+    'may'=>'May',
+    'june'=>'June',
+    'july'=>'July',
+    'august'=>'August',
+    'september'=>'September',
+    'october'=>'October',
+    'november'=>'November',
+    'december'=>'December',
+];

@@ -1,0 +1,844 @@
+<template>
+    <form action="#" @submit.prevent="register">
+        <div id="item-registration">
+            <div class="row">
+                <div class="col-2">
+                    <button type="submit" @click.prevent="back"
+                            class="btn btn-lg btn-warning btn-block btn-fixed-width">{{__('common.back')}}
+                    </button>
+                </div>
+                <div class="col-2">
+                    <h6 class="text-center text-danger">※{{__('item.required')}}</h6>
+                </div>
+                <div class="col-4">
+                    <h2 class="text-center">{{title}}</h2>
+                </div>
+                <div class="col-4">
+                    <p class="text-right">
+                        <button type="submit" class="btn btn-lg btn-danger btn-fixed-width">{{operation}}</button>
+                        <button type="reset" class="btn btn-lg btn-danger btn-fixed-width" @click.prevent="clear">
+                            {{clearing}}
+                        </button>
+                    </p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-9">
+                    <br>
+                    <table>
+                        <tbody class="list">
+                        <tr>
+                            <td class="text-right align-middle" width="15%">
+                                <span class="required"> ※</span>
+                                <label for="stack_date">{{__('item.stack_date')}}</label>&nbsp;
+                            </td>
+                            <td width="25%">
+                                <datepicker v-model="itemData.stack_date" id="stack_date" name="stack_date"
+                                            :bootstrap-styling="true" v-on:change="notify"
+                                            :format="options.weekday" :clear-button="true"
+                                            :language="options.language.ja"
+                                            required></datepicker>
+                            </td>
+                            <td width="5%"></td>
+                            <td class="text-right" width="15%" valign="bottom">
+                                <label for="stack_time_hour">{{__('item.stack_time')}}</label>&nbsp;
+                            </td>
+                            <td class="stack_time_hour" width="10%">
+                                <select name="stack_time_hour" id="stack_time_hour" v-model="stack_time_hour"
+                                        v-on:input="timeFormatter" class="form-control">
+                                    <option v-for="hour in getEnumerationHours()" :value="hour">
+                                        {{ hour }}
+                                    </option>
+                                </select>
+                            </td>
+                            <th width="3%" class="text-center" valign="center"><span>:</span></th>
+                            <td width="10%">
+                                <select name="stack_time_min" id="stack_time_min" v-model="stack_time_min"
+                                        v-on:input="timeFormatter" class="form-control">
+                                    <option v-for="min in getEnumerationMins()" :value="min">
+                                        {{ min }}
+                                    </option>
+                                </select>
+                            </td>
+                            <td width="10%" class="text-right" valign="bottom">
+                                <label for="billing">{{__('item.invoice')}}</label></td>
+                            <td width="7%" class="text-center">
+                                <input type="checkbox" name="down_invoice" id="billing" v-on:click="setMandatory"
+                                       v-model="itemData.down_invoice" ref="invoice">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" valign="bottom">
+                                <span class="required"> ※</span>
+                                <label for="down_date">{{__('item.down_date')}}</label>&nbsp;
+                            </td>
+                            <td>
+                                <datepicker v-model="itemData.down_date" id="down_date" name="down_date"
+                                            :bootstrap-styling="true" v-on:change="notify"
+                                            :format="options.weekday" :clear-button="true"
+                                            :language="options.language.ja"
+                                            required></datepicker>
+                            </td>
+                            <td></td>
+                            <td class="text-right" valign="bottom">
+                                <label for="down_time_hour">{{__('item.down_time')}}</label>&nbsp;
+                            </td>
+                            <td>
+                                <select name="down_time_hour" id="down_time_hour" v-model="down_time_hour"
+                                        v-on:input="timeFormatter" class="form-control">
+                                    <option v-for="hour in getEnumerationHours()" :value="hour">
+                                        {{ hour }}
+                                    </option>
+                                </select>
+                            </td>
+                            <th class="text-center" valign="center">
+                                <span class="">:</span>
+                            </th>
+                            <td>
+                                <select name="down_time_min" id="down_time_min" v-model="down_time_min"
+                                        v-on:input="timeFormatter" class="form-control">
+                                    <option v-for="min in getEnumerationMins()" :value="min">
+                                        {{ min }}
+                                    </option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" valign="bottom">
+                                <span class="required"> ※</span>
+                                <label for="item_vehicle">{{__('item.vehicle_model')}}</label>&nbsp;
+                            </td>
+                            <td>
+                                <select name="item_vehicle" id="item_vehicle" v-model="itemData.item_vehicle"
+                                        @change="calcUnitPrice"
+                                        class="form-control" required>
+                                    <option value=""></option>
+                                    <option>ウイング</option>
+                                    <option>大平</option>
+                                    <option>4平</option>
+                                    <option>バルク</option>
+                                    <option>ユニック</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" valign="bottom">
+                                <span class="required"> ※</span>
+                                <label for="shipper_id">{{__('item.shipper')}}</label>&nbsp;
+                            </td>
+                            <td>
+                                <select name="shipper" id="shipper_id" v-model="itemData.shipper_id" @change="calcUnitPrice"
+                                        class="form-control" v-on:change="setShipperName" required>
+                                    <option value=""></option>
+                                    <option v-for="shipper in shippers" :value="shipper.shipper_id"
+                                            :selected="itemData.shipper_name === shipper.shipper_name1 + ' ' + shipper.shipper_name2">
+                                        {{ shipper.shipper_name1 + " " + shipper.shipper_name2}}
+                                    </option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" valign="bottom">
+                                <span class="required"> ※</span>
+                                <label for="stack_point">{{__('item.stack_point')}}</label>&nbsp;
+                            </td>
+                            <td>
+                                <select name="shipper" id="stack_point" v-model="itemData.stack_point" @change="calcUnitPrice"
+                                        class="form-control" v-on:change="notify" required>
+                                    <option value=""></option>
+                                    <option v-for="s in stack_points" :value="s.stack_point"
+                                            :selected="itemData.stack_point === s.stack_point">{{s.stack_point}}
+                                    </option>
+                                </select>
+                            </td>
+                            <td class="text-center"></td>
+                            <td class="text-right" valign="bottom">
+                                ~&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <span class="required"> ※</span>
+                                <label for="down_point">{{__('item.down_point')}}</label>&nbsp;
+                            </td>
+                            <td colspan="3">
+                                <select name="shipper" id="down_point" v-model="itemData.down_point" v-on:focusout="calcUnitPrice"
+                                        class="form-control" v-on:change="notify" required>
+                                    <option value=""></option>
+                                    <option v-for="s in down_points" :value="s.down_point"
+                                            :selected="itemData.down_point === s.down_point">{{s.down_point}}
+                                    </option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" valign="bottom">
+                                <label for="stack_point">{{__('item.stack_point')}}</label>&nbsp;
+                            </td>
+                            <td>
+                                <input type="text" placeholder="" class="form-control" v-on:focusout="calcUnitPrice"
+                                       v-on:change="notify"
+                                       v-model="unitPriceData.stack_point" id="stack_point_price"/>
+                            </td>
+                            <td class="text-center"></td>
+                            <td class="text-right" valign="bottom">
+                                <label for="down_point">{{__('item.down_point')}}</label>&nbsp;
+                            </td>
+                            <td colspan="3">
+                                <input id="down_point_price" for="down_point" type="text" placeholder=""
+                                       class="form-control" v-on:focusout="calcUnitPrice" v-on:change="notify"
+                                       v-model="unitPriceData.down_point"/>
+                            </td>
+                            <td width="10%" class="text-right" valign="bottom" colspan="2">
+                                <button type="reset" class="btn btn-lg btn-danger" style="height: 38px; width: 110px;text-align: center"
+                                        @click.prevent="registerUnitPrice">単価登録</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" valign="bottom">
+                                <label for="weight">{{__('item.number_t')}}</label>&nbsp;
+                            </td>
+                            <td>
+                                <input id="weight" type="text" placeholder="" class="form-control"
+                                       v-on:input="setWeight" v-model="itemData.weight"/>
+                            </td>
+                            <td class="text-center" valign="center">t</td>
+                            <td class="text-right" valign="bottom">
+                                <label for="empty_pl">{{__('item.empty_pl')}}</label>&nbsp;
+                            </td>
+                            <td colspan="3">
+                                <select name="empty_pl" id="empty_pl" v-model="itemData.empty_pl"
+                                        class="form-control" v-on:change="notify">
+                                    <option value=""></option>
+                                    <option value="1">{{__('item.yes')}}</option>
+                                    <option value="0">{{__('item.none')}}</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" valign="bottom"><label for="per_ton">{{__('item.per_ton')}}</label>&nbsp;
+                            </td>
+                            <td>
+                                <money id="per_ton" type="text" placeholder="" class="form-control"
+                                       v-model="per_ton" v-on:change="notify" v-bind="money"/>
+                            </td>
+                            <td class="text-center" valign="center">{{__('item.yen')}}</td>
+                            <td class="text-center"><span class="text-center">x&nbsp;&nbsp;</span></td>
+                            <td colspan="3">
+                                <input type="text" placeholder="" class="form-control" id="ton"
+                                       v-model="ton" value="" v-on:change="notify"/>
+                            </td>
+                            <td valign="center">&nbsp;<span class="text-right">t</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-right">
+                                <label for="per_vehicle" valign="bottom">{{__('item.per_vehicle')}}</label>&nbsp;
+                            </td>
+                            <td>
+                                <money class="form-control" id="per_vehicle"
+                                       :disabled="isDisabled" v-model="per_vehicle" v-bind="money"/>
+                            </td>
+                            <td class="text-center" valign="center">{{__('item.yen')}}&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" valign="bottom"><label for="highway_cost">高速代</label>&nbsp;
+                            </td>
+                            <td>
+                                <money type="text" placeholder="" class="form-control" id="highway_cost"
+                                       v-model="itemData.highway_cost" value="" v-bind="money"/>
+                            </td>
+                            <td class="text-center" valign="center">{{__('item.yen')}}&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" valign="bottom"><label for="item_price">{{__('item.amount_of_money')}}</label>&nbsp;
+                            </td>
+                            <td>
+                                <money type="text" placeholder="" class="form-control" id="item_price"
+                                       v-model="itemData.item_price" value="" v-bind="money" readonly/>
+                            </td>
+                            <td class="text-center" valign="center">{{__('item.yen')}}&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" valign="bottom"><label
+                                for="vehicle_no3">{{__('item.vehicle_no')}}</label>&nbsp;
+                            </td>
+                            <td>
+                                <input type="text" placeholder="" class="form-control" id="vehicle_no3"
+                                       v-on:change="notify"
+                                       v-model="itemData.vehicle_no3"/>
+                            </td>
+                            <td></td>
+                            <td class="text-right" valign="bottom"><label
+                                for="driver_id">{{__('item.driver_name')}}</label>&nbsp;
+                            </td>
+                            <td colspan="3">
+                                <select name="driver_id" id="driver_id" v-on:change="setDriverName"
+                                        v-model="itemData.driver_id" class="form-control">
+                                    <option value=""></option>
+                                    <option v-for="driver in drivers" :value="driver.driver_id">
+                                        {{ driver.driver_name }}
+                                    </option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" valign="bottom">
+                                <span ref="editMandatory" class="required"> ※</span>
+                                <label for="chartered_vehicle">{{__('item.chartered_vehicle')}}</label>&nbsp;
+                            </td>
+                            <td>
+                                <select name="chartered_vehicle" id="chartered_vehicle"
+                                        v-model="itemData.vehicle_id" class="form-control" ref="chartered_vehicle">
+                                    <option value=""></option>
+                                    <option v-for="vehicle in vehicles" :value="vehicle.vehicle_id">
+                                        {{ vehicle.company_name }}
+                                    </option>
+                                </select>
+                            </td>
+                            <td></td>
+
+                        </tr>
+                        <tr>
+                            <td class="text-right" valign="bottom">
+                                <label for="vehicle_payment">{{__('item.rental_vehicle_payment')}}</label>&nbsp;
+                            </td>
+                            <td>
+                                <money type="text" class="form-control" id="vehicle_payment" v-on:change="notify"
+                                       v-model="itemData.vehicle_payment" v-bind="money"/>
+                            </td>
+                            <td valign="center">&nbsp;<span class="text-right">{{__('item.yen')}}</span></td>
+                            <td class="text-right" valign="bottom"><label for="pay_highway_cost">支払高速代</label>&nbsp;
+                            </td>
+                            <td colspan="3">
+                                <money type="text" placeholder="" class="form-control" id="pay_highway_cost"
+                                       v-model="itemData.pay_highway_cost" value="" v-bind="money"/>
+                            </td>
+                            <td valign="center">&nbsp;<span class="text-right">{{__('item.yen')}}</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" valign="top"><label for="item_remark">{{__('item.remarks')}}</label>&nbsp;
+                            </td>
+                            <td colspan="6">
+                                <textarea rows="3" class="form-control" id="item_remark" v-on:change="notify"
+                                    v-model="itemData.item_remark"></textarea>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+</template>
+
+<script>
+    import Datepicker from "vuejs-datepicker";
+    import {en, ja} from 'vuejs-datepicker/dist/locale'
+    import {VueSimpleAlert} from "vue-simple-alert";
+    import money from 'v-money'
+    import {Money} from 'v-money'
+
+    export default {
+        components: {
+            Datepicker,
+            Money,
+        },
+        props: {
+            backUrl: {type: String, required: true},
+            shipperUrl: {type: String, required: true},
+            driverUrl: {type: String, required: true},
+            vehicleUrl: {type: String, required: true},
+            unitPriceUrl: {type: String, required: true},
+            resourceUrl: {type: String, required: true},
+            redirectUrl: {type: String, required: true},
+            title: {type: String, required: true},
+            operation: {type: String, required: true},
+            clearing: {type: String, required: true},
+            itemId: {type: String},
+            mode: {type: String},
+            stackPointsUrl: {type: String, required: true},
+            downPointsUrl: {type: String, required: true},
+            unitPrice: {type: String, required: true},
+        },
+        data() {
+            return {
+                money: {
+                    thousands: ',',
+                    prefix: '¥',
+                    precision: 0,
+                    masked: false
+                },
+                itemData: {
+                    item_id: '',
+                    shipper_id: '',
+                    driver_id: '',
+                    vehicle_id: '',
+                    status: 0,
+                    stack_date: '',
+                    stack_time: '',
+                    down_date: '',
+                    down_time: '',
+                    down_invoice: '',
+                    stack_point: '',
+                    down_point: '',
+                    weight: '',
+                    empty_pl: '',
+                    item_price: '',
+                    item_driver_name: '',
+                    vehicle_no3: '',
+                    shipper_name: '',
+                    item_vehicle: '',
+                    vehicle_payment: '',
+                    item_completion_date: '',
+                    item_remark: '',
+                    delete_flg: 0,
+                    create_id: '',
+                    update_id: '',
+                    remember_token: '',
+                },
+                unitPriceData: {
+                    car_type: '',
+                    shipper_id: '',
+                    stack_point: '',
+                    down_point: '',
+                    type: '',
+                    price: 0,
+                    delete_flg: 0,
+                    shipper_no: '',
+                },
+                isDisabled: false,
+                shippers: [],
+                drivers: [],
+                vehicles: [],
+                stack_points: [],
+                down_points: [],
+                per_ton: '',
+                per_vehicle: '',
+                ton: '',
+                anyFieldChanged: 0,
+                stack_time_hour: '',
+                stack_time_min: '',
+                down_time_hour: '',
+                down_time_min: '',
+                vehicle_model: '',
+                options: {
+                    monthFormat: "yyyy/MM",
+                    weekday: "yyyy/MM/dd",
+                    language: {
+                        en: en,
+                        ja: ja
+                    },
+                },
+            }
+        },
+        mounted() {
+            this.fetchShippers(this.shipperUrl);
+            this.fetchDrivers(this.driverUrl);
+            this.fetchVehicles(this.vehicleUrl);
+            this.hideMandatory();
+            this.fetchStackPoints();
+            this.fetchDownPoints();
+            if (this.itemId !== undefined)
+                this.fetchEditData();
+        },
+
+        methods: {
+            notify() {
+                this.anyFieldChanged = 1;
+            },
+            fetchEditData() {
+                axios.get(this.resourceUrl + "/" + this.itemId)
+                    .then(response => {
+                        this.itemData = response.data;
+                        let stack_time = response.data.stack_time.split(":");
+                        let down_time = response.data.down_time.split(":");
+                        this.stack_time_hour = stack_time[0];
+                        this.stack_time_min = stack_time[1];
+                        this.down_time_hour = down_time[0];
+                        this.down_time_min = down_time[1];
+                    });
+                //this.fetchShippers(this.shipperUrl);
+            },
+            setDriverName() {
+                this.anyFieldChanged = 1;
+                for (let i = 0; i < this.drivers.length; i++) {
+                    if (this.itemData.driver_id === this.drivers[i].driver_id) {
+                        this.itemData.item_driver_name = this.drivers[i].driver_name;
+                        this.itemData.vehicle_no3 = this.drivers[i].vehicle_no3;
+                    }
+                }
+            },
+            setShipperName() {
+                this.anyFieldChanged = 1;
+                for (let i = 0; i < this.shippers.length; i++) {
+                    if (this.itemData.shipper_id === this.shippers[i].shipper_id) {
+                        this.itemData.shipper_name = this.shippers[i].shipper_name1 + " " + this.shippers[i].shipper_name2;
+                        break;
+                    }
+                }
+                this.calcUnitPrice();
+            },
+            setWeight() {
+                this.anyFieldChanged = 1;
+                this.ton = this.itemData.weight;
+            },
+            perTonChange() {
+                this.anyFieldChanged = 1;
+                if (this.per_ton === 0 && this.ton === '') {
+                    document.getElementById('per_vehicle').disabled = false;
+                } else {
+                    document.getElementById('per_vehicle').disabled = true;
+                }
+                this.calcItemPrice();
+            },
+            calcItemPrice() {
+                this.anyFieldChanged = 1;
+                if (this.per_ton !== 0 && this.ton !== '') {
+                    this.itemData.item_price = this.per_ton * this.ton;
+                } else if (this.per_vehicle !== '0') {
+                    this.itemData.item_price = this.per_vehicle;
+                }
+            },
+            calcUnitPrice() {
+                this.anyFieldChanged = 1;
+                let component = this;
+                if ((this.itemData.item_vehicle !== '') && (this.itemData.shipper_id !== '')
+                    && (this.itemData.stack_point !== '') && (this.itemData.down_point !== '')) {
+                    axios.get(this.unitPriceUrl + '?vehicle_model=' + this.itemData.item_vehicle
+                        + '&shipper_id=' + this.itemData.shipper_id
+                        + '&stack_point=' + this.itemData.stack_point
+                        + '&down_point=' + this.itemData.down_point)
+                        .then(response => {
+                            if (response.data.price !== undefined) {
+                                component.per_ton = response.data.price;
+                            }
+                            component.calcItemPrice();
+                        });
+                }
+            },
+            registerUnitPrice() {
+                /**if (this.unitPriceData.stack_point === ''
+                    || this.unitPriceData.down_point === ''
+                    || this.itemData.item_vehicle === ''
+                    || this.itemData.shipper_id === null
+                    || this.unitPriceData.car_type === ''
+                    || this.per_ton === 0) {
+                    this.generalErrorDialog();
+                } else {**/
+                    this.unitPriceData.car_type = this.itemData.item_vehicle;
+                    this.unitPriceData.shipper_id = this.itemData.shipper_id;
+                    if (this.per_ton !== 0) {
+                        this.unitPriceData.price = this.per_ton;
+                            this.unitPriceData.type = 't';
+                    } else
+                    if (this.per_vehicle !== 0) {
+                        this.unitPriceData.price = this.per_vehicle;
+                            this.unitPriceData.type = '台'
+                    }
+                    this.unitPriceData.delete_flg = 0;
+                    for (let i = 0; i < this.shippers.length; i++) {
+                        if (this.itemData.shipper_id === this.shippers[i].shipper_id) {
+                            this.unitPriceData.shipper_id = this.itemData.shipper_id;
+                            this.unitPriceData.shipper_no = this.shippers[i].shipper_no;
+                            break;
+                        }
+                    }
+                    axios.post(this.unitPrice, this.unitPriceData)
+                        .then(response => {
+                            this.createSuccessDialog();
+                            this.fetchDownPoints();
+                            this.fetchStackPoints();
+                        }).catch(error => {
+                        this.errorDialog(error);
+                    });
+                //}
+            },
+            perVehicleChange() {
+                this.anyFieldChanged = 1;
+                if (this.per_vehicle == '0') {
+                    document.getElementById('per_ton').disabled = false;
+                    document.getElementById('ton').disabled = false;
+                } else {
+                    document.getElementById('per_ton').disabled = true;
+                    document.getElementById('ton').disabled = true;
+                    this.itemData.item_price = this.per_vehicle;
+                }
+            },
+            timeFormatter() {
+                this.anyFieldChanged = 1;
+                this.itemData.stack_time = document.getElementById('stack_time_hour').value
+                    + ':' + document.getElementById('stack_time_min').value
+                this.itemData.down_time = document.getElementById('down_time_hour').value
+                    + ':' + document.getElementById('down_time_min').value
+            },
+            clear() {
+                if (this.itemId !== undefined) {
+                    this.$modal.show({
+                            template: this.dialogConfirmTemplate,
+                            props: ['title', 'text', 'triggerOnConfirm']
+                        },
+                        {
+                            title: this.__('alert.message'),
+                            text: this.__('common.cant_be_undone'),
+                            triggerOnConfirm: () => {
+                                this.$modal.hide('confirm')
+                                this.deleteItem(this.itemData.item_id);
+                            }
+                        },
+                        {
+                            height: 'auto',
+                            name: 'confirm'
+                        });
+                } else {
+                    for (let i in this.itemData) {
+                        this.itemData[i] = "";
+                    }
+                    for (let i in this.unitPriceData) {
+                        this.unitPriceData[i] = "";
+                    }
+                    this.vehicle_model = "";
+                    this.per_ton = "";
+                    this.per_vehicle = "";
+                    this.ton = "";
+                    this.stack_time_hour = "";
+                    this.stack_time_min = "";
+                    this.down_time_hour = "";
+                    this.down_time_min = "";
+                    document.getElementById('per_ton').disabled = false;
+                    document.getElementById('ton').disabled = false;
+                    document.getElementById('per_vehicle').disabled = false;
+                }
+            },
+            back() {
+                if ((this.itemId !== undefined && this.anyFieldChanged == 1) || (this.isEntry() && this.itemId === undefined)) {
+                    this.$modal.show({
+                            template: this.dialogConfirmTemplate,
+                            props: ['title', 'text', 'triggerOnConfirm']
+                        },
+                        {
+                            title: this.__('alert.message'),
+                            text: '編集中のデータを破棄して前の画面に戻りますか？',
+                            triggerOnConfirm: () => {
+                                window.location.href = this.backUrl;
+                            }
+                        },
+                        {
+                            height: 'auto',
+                        });
+                } else {
+                    window.location.href = this.backUrl;
+                }
+            },
+            isEntry() {
+                if (this.itemData.item_id === '' &&
+                    this.itemData.shipper_id === '' &&
+                    this.vehicle_model === '' &&
+                    this.itemData.driver_id === '' &&
+                    this.itemData.vehicle_id === '' &&
+                    this.itemData.stack_date === '' &&
+                    this.itemData.stack_time === '' &&
+                    this.itemData.down_date === '' &&
+                    this.itemData.down_time === '' &&
+                    this.itemData.down_invoice === '' &&
+                    this.itemData.stack_point === '' &&
+                    this.itemData.down_point === '' &&
+                    this.itemData.weight === '' &&
+                    this.itemData.empty_pl === '' &&
+                    this.itemData.item_price === 0 &&
+                    this.itemData.item_driver_name === '' &&
+                    this.itemData.vehicle_no3 === '' &&
+                    this.itemData.shipper_name === '' &&
+                    this.itemData.item_vehicle === '' &&
+                    this.itemData.vehicle_payment === 0 &&
+                    this.itemData.item_completion_date === '' &&
+                    this.itemData.item_remark === '') {
+                    return false
+                } else {
+                    return true;
+                }
+
+            },
+            fetchShippers(url) {
+                axios.get(url)
+                    .then(shippers => {
+                        this.shippers = shippers.data
+                    });
+            },
+            fetchDrivers(url) {
+                axios.get(url)
+                    .then(response => {
+                        this.drivers = response.data
+                    });
+            },
+            fetchVehicles(url) {
+                axios.get(url)
+                    .then(response => {
+                        this.vehicles = response.data
+                    });
+            },
+            register() {
+                const itemReg = this;
+                if (typeof this.itemData.stack_date == "object" && this.itemData.stack_date !== '')
+                    this.itemData.stack_date = this.itemData.stack_date.toISOString().slice(0, 10);
+                if (typeof this.itemData.down_date == "object" && this.itemData.down_date !== '')
+                    this.itemData.down_date = this.itemData.down_date.toISOString().slice(0, 10);
+                // check whether it is update or create operation
+                if (this.itemData.stack_date <= this.itemData.down_date) {
+                    if (this.itemId === undefined) {
+                        // create a new item if it is create operation
+                        axios.post(this.resourceUrl, this.itemData)
+                            .then(function (response) {
+                                itemReg.showSuccessDialog();
+                            })
+                            .catch(function (error) {
+                                itemReg.showDialog(error.response.data);
+                                return false;
+                            });
+                        return true;
+                    } else {
+                        // update that item if it is update operation
+                        this.updateItem(this.itemData);
+
+                    }
+                } else {
+                    this.showWarningDialog(this.__('item.down_data_is_higher'));
+                }
+            },
+            updateItem(item) {
+                let id = item.item_id;
+                const itemRegistration = this;
+                axios.put(this.resourceUrl + '/' + id, item)
+                    .then(function (response) {
+                        itemRegistration.showSuccessDialog();
+                    })
+                    .catch(function (error) {
+                        itemRegistration.showDialog(error.response.data);
+                    });
+            },
+            deleteItem(item_id) {
+                const itemRegistration = this;
+                axios.delete(this.resourceUrl + '/' + item_id)
+                    .then(function (response) {
+                        itemRegistration.showDeletionSuccessDialog();
+                    })
+                    .catch(function (error) {
+                        itemRegistration.showDialog(error.response.data);
+                        return false;
+                    });
+                return true;
+            },
+            fetchStackPoints() {
+                axios.get(this.stackPointsUrl)
+                    .then(stack => {
+                        this.stack_points = stack.data
+                    });
+            },
+            fetchDownPoints() {
+                axios.get(this.downPointsUrl)
+                    .then(down => {
+                        this.down_points = down.data
+                    });
+            },
+            showDialog(response) {
+                let message = response.message + ': ';
+                let errors = response.errors;
+                $.each(errors, function (key, value) {
+                    message += value[0]; //showing only the first error.
+                });
+
+                this.$modal.show({
+                        template: this.dialogTemplate,
+                        props: ['title', 'text']
+                    },
+                    {title: this.__('alert.message'), text: message},
+                    {
+                        height: 'auto',
+                    });
+            },
+            getEnumerationHours() {
+                return ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14'
+                    , '15', '16', '17', '18', '19', '20', '21', '22', '23'];
+            },
+            getEnumerationMins() {
+                return ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14'
+                    , '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'
+                    , '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '44', '45', '46', '47', '48', '49',
+                    '50', '51', '52', '53', '54', '55', '56', '57', '58', '59'];
+            },
+            setMandatory() {
+                this.anyFieldChanged = 1;
+                if (this.$refs.invoice.checked == true) {
+                    this.showMandatory();
+                } else {
+                    this.hideMandatory();
+                }
+            },
+            hideMandatory() {
+                this.$refs.editMandatory.style.visibility = "hidden";
+                this.$refs.chartered_vehicle.required = false;
+            },
+
+            showMandatory() {
+                this.$refs.editMandatory.style.visibility = "visible";
+                this.$refs.chartered_vehicle.required = true;
+            },
+            showSuccessDialog() {
+                this.$modal.show({
+                        template: this.dialogTemplate,
+                        props: ['title', 'text']
+                    },
+                    {title: this.__('alert.done'), text: this.__('item.operation_is_successful')},
+                    {
+                        height: 'auto',
+                        width: 400
+                    }, {
+                        'before-close': () => {
+                            window.location.href = this.redirectUrl;
+                        }
+                    });
+            },
+            showDeletionSuccessDialog() {
+                this.$modal.show({
+                        template: this.dialogTemplate,
+                        props: ['title', 'text']
+                    },
+                    {title: this.__('alert.done'), text: this.__('item.deletion_is_successful')},
+                    {
+                        height: 'auto',
+                        width: 400
+                    }, {
+                        'before-close': () => {
+                            window.location.href = this.redirectUrl;
+                        }
+                    });
+            },
+            showWarningDialog(text) {
+                this.$modal.show({
+                        template: this.dialogTemplate,
+                        props: ['title', 'text']
+                    },
+                    {title: this.__('alert.done'), text: text},
+                    {
+                        height: 'auto',
+                    });
+            },
+        },
+        watch: {
+            per_ton: function () {
+                this.perTonChange();
+            },
+            ton: function () {
+                this.perTonChange();
+            },
+            per_vehicle: function () {
+                this.perVehicleChange();
+            }
+        },
+        name: 'ItemRegistration'
+    }
+</script>
+<style>
+    .required {
+        color: red;
+    }
+
+    #item-registration td {
+        padding-top: 0.5rem;
+    }
+</style>

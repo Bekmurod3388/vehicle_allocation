@@ -1,0 +1,31 @@
+<?php
+
+return [
+
+    'payment_registration' => '支払登録',
+    'shipper' => '荷主',
+    'payment_year' => '支払年',
+    'payment_month' => '支払月',
+    'payment_day' => '支払日',
+    'payment_date' => '支払日',
+    'transfer' => '振込',
+    'offset' => '相殺',
+    'other' => 'その他',
+    'transfer_fee' => '振込手数料',
+    'total_payment' => '合計支払額',
+    'outgoing_balance' => '支払残高',
+    'yen' => '円',
+    'january'=>'一月',
+    'february'=>'2月',
+    'march'=>'行進',
+    'april'=>'4月',
+    'may'=>'五月',
+    'june'=>'六月',
+    'july'=>'7月',
+    'august'=>'8月',
+    'september'=>'九月',
+    'october'=>'10月',
+    'november'=>'11月',
+    'december'=>'12月',
+    'total_credit_amount'=>'合計入金額',
+];
